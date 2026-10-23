@@ -1,4 +1,4 @@
-name: Compile
+name: Build APK
 
 on:
     pull_request:
@@ -10,8 +10,8 @@ permissions:
     contents: read
 
 jobs:
-    compile:
-        name: Compile app (foss debug)
+    build-apk:
+        name: Build APK (foss debug)
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
@@ -23,5 +23,12 @@ jobs:
                   distribution: temurin
                   java-version: 17
 
-            - name: Compile foss debug Kotlin and resources
-              run: ./gradlew :app:compileFossDebugSources --console=plain
+            - name: Build foss debug APK
+              run: ./gradlew :app:assembleFossDebug --console=plain
+
+            - name: Upload APK artifact
+              uses: actions/upload-artifact@v6
+              with:
+                  name: fossify-phone-foss-debug
+                  path: app/build/outputs/apk/foss/debug/*.apk
+                  retention-days: 14
