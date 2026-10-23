@@ -84,7 +84,7 @@
     <string name="import_call_history">Import call history</string>
     <string name="calling_accounts">Calling accounts</string>
     <string name="accessibility">Accessibility</string>
-    <string name="always_use_speaker">Always use speaker during calls</string>
+    <string name="always_use_speaker">Calls use speaker by default</string>
 
     <!-- FAQ -->
     <string name="faq_1_title">I hear incoming calls, but the screen doesn\'t turn on. What can I do?</string>
