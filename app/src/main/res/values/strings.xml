@@ -86,6 +86,7 @@
     <string name="accessibility">Accessibility</string>
     <string name="always_use_speaker">Calls use speaker by default</string>
     <string name="show_only_end_call_button">Only show disconnect icon during calls</string>
+    <string name="screen_on_during_calls">Screen on during calls</string>
 
     <!-- FAQ -->
     <string name="faq_1_title">I hear incoming calls, but the screen doesn\'t turn on. What can I do?</string>

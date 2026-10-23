@@ -114,6 +114,7 @@ class SettingsActivity : SimpleActivity() {
         setupAlwaysShowFullscreen()
         setupAlwaysUseSpeaker()
         setupShowOnlyEndCallButton()
+        setupScreenOnDuringCalls()
         setupCallsExport()
         setupCallsImport()
         updateTextColors(binding.settingsHolder)
@@ -403,6 +404,16 @@ class SettingsActivity : SimpleActivity() {
             settingsShowOnlyEndCallButtonHolder.setOnClickListener {
                 settingsShowOnlyEndCallButton.toggle()
                 config.showOnlyEndCallButton = settingsShowOnlyEndCallButton.isChecked
+            }
+        }
+    }
+
+    private fun setupScreenOnDuringCalls() {
+        binding.apply {
+            settingsScreenOnDuringCalls.isChecked = config.screenOnDuringCalls
+            settingsScreenOnDuringCallsHolder.setOnClickListener {
+                settingsScreenOnDuringCalls.toggle()
+                config.screenOnDuringCalls = settingsScreenOnDuringCalls.isChecked
             }
         }
     }

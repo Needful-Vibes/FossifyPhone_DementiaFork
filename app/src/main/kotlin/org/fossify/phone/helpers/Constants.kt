@@ -21,6 +21,7 @@ const val HIDE_DIALPAD_NUMBERS = "hide_dialpad_numbers"
 const val ALWAYS_SHOW_FULLSCREEN = "always_show_fullscreen"
 const val ALWAYS_USE_SPEAKER = "always_use_speaker"
 const val SHOW_ONLY_END_CALL_BUTTON = "show_only_end_call_button"
+const val SCREEN_ON_DURING_CALLS = "screen_on_during_calls"
 
 const val ALL_TABS_MASK = TAB_CONTACTS or TAB_FAVORITES or TAB_CALL_HISTORY
 
