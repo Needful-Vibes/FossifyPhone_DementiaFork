@@ -113,6 +113,7 @@ class SettingsActivity : SimpleActivity() {
         setupDisableSwipeToAnswer()
         setupAlwaysShowFullscreen()
         setupAlwaysUseSpeaker()
+        setupShowOnlyEndCallButton()
         setupCallsExport()
         setupCallsImport()
         updateTextColors(binding.settingsHolder)
@@ -392,6 +393,16 @@ class SettingsActivity : SimpleActivity() {
             settingsAlwaysUseSpeakerHolder.setOnClickListener {
                 settingsAlwaysUseSpeaker.toggle()
                 config.alwaysUseSpeaker = settingsAlwaysUseSpeaker.isChecked
+            }
+        }
+    }
+
+    private fun setupShowOnlyEndCallButton() {
+        binding.apply {
+            settingsShowOnlyEndCallButton.isChecked = config.showOnlyEndCallButton
+            settingsShowOnlyEndCallButtonHolder.setOnClickListener {
+                settingsShowOnlyEndCallButton.toggle()
+                config.showOnlyEndCallButton = settingsShowOnlyEndCallButton.isChecked
             }
         }
     }
