@@ -173,6 +173,53 @@ class CallActivity : SimpleActivity() {
     }
 
     private fun initButtons() = binding.apply {
+        setupAnswerControls()
+        setupCallActionButtons()
+        setupDialpadButtons()
+
+        dialpadWrapper.setBackgroundColor(
+            if (isSystemInDarkMode()) {
+                getProperBackgroundColor().lightenColor(2)
+            } else {
+                getProperBackgroundColor()
+            }
+        )
+
+        arrayOf(dialpadClose, callSimImage, dialpadClearChar).forEach {
+            it.applyColorFilter(getProperTextColor())
+        }
+
+        val bgColor = getProperBackgroundColor()
+        val inactiveColor = getInactiveButtonColor()
+        arrayOf(
+            callToggleMicrophone, callToggleSpeaker, callDialpad,
+            callToggleHold, callAdd, callSwap, callMerge, callManage
+        ).forEach {
+            it.applyColorFilter(bgColor.getContrastColor())
+            it.background.applyColorFilter(inactiveColor)
+        }
+
+        arrayOf(
+            callToggleMicrophone, callToggleSpeaker, callDialpad,
+            callToggleHold, callAdd, callSwap, callMerge, callManage
+        ).forEach { imageView ->
+            imageView.setOnLongClickListener {
+                if (!imageView.contentDescription.isNullOrEmpty()) {
+                    toast(imageView.contentDescription.toString())
+                }
+                true
+            }
+        }
+
+        callSimId.setTextColor(getProperTextColor().getContrastColor())
+        dialpadInput.disableKeyboard()
+
+        dialpadWrapper.onGlobalLayout {
+            dialpadHeight = dialpadWrapper.height.toFloat()
+        }
+    }
+
+    private fun setupAnswerControls() = binding.apply {
         if (config.disableSwipeToAnswer) {
             callDraggable.beGone()
             callDraggableBackground.beGone()
@@ -189,7 +236,9 @@ class CallActivity : SimpleActivity() {
         } else {
             handleSwipe()
         }
+    }
 
+    private fun setupCallActionButtons() = binding.apply {
         callToggleMicrophone.setOnClickListener {
             toggleMicrophone()
         }
@@ -234,7 +283,9 @@ class CallActivity : SimpleActivity() {
         callEnd.setOnClickListener {
             endCall()
         }
+    }
 
+    private fun setupDialpadButtons() = binding.apply {
         dialpadInclude.apply {
             dialpad0Holder.setOnClickListener { dialpadPressed('0') }
             dialpad1Holder.setOnClickListener { dialpadPressed('1') }
@@ -271,47 +322,6 @@ class CallActivity : SimpleActivity() {
             dialpadHashtagHolder.setOnClickListener { dialpadPressed('#') }
             dialpadClearChar.setOnClickListener { clearChar(it) }
             dialpadClearChar.setOnLongClickListener { clearInput() }
-        }
-
-        dialpadWrapper.setBackgroundColor(
-            if (isSystemInDarkMode()) {
-                getProperBackgroundColor().lightenColor(2)
-            } else {
-                getProperBackgroundColor()
-            }
-        )
-
-        arrayOf(dialpadClose, callSimImage, dialpadClearChar).forEach {
-            it.applyColorFilter(getProperTextColor())
-        }
-
-        val bgColor = getProperBackgroundColor()
-        val inactiveColor = getInactiveButtonColor()
-        arrayOf(
-            callToggleMicrophone, callToggleSpeaker, callDialpad,
-            callToggleHold, callAdd, callSwap, callMerge, callManage
-        ).forEach {
-            it.applyColorFilter(bgColor.getContrastColor())
-            it.background.applyColorFilter(inactiveColor)
-        }
-
-        arrayOf(
-            callToggleMicrophone, callToggleSpeaker, callDialpad,
-            callToggleHold, callAdd, callSwap, callMerge, callManage
-        ).forEach { imageView ->
-            imageView.setOnLongClickListener {
-                if (!imageView.contentDescription.isNullOrEmpty()) {
-                    toast(imageView.contentDescription.toString())
-                }
-                true
-            }
-        }
-
-        callSimId.setTextColor(getProperTextColor().getContrastColor())
-        dialpadInput.disableKeyboard()
-
-        dialpadWrapper.onGlobalLayout {
-            dialpadHeight = dialpadWrapper.height.toFloat()
         }
     }
 
