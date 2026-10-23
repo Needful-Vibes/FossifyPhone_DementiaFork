@@ -22,7 +22,10 @@ import android.view.animation.OvershootInterpolator
 import android.widget.ImageView
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.os.postDelayed
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.children
+import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import androidx.core.view.updatePadding
 import com.bumptech.glide.Glide
@@ -57,6 +60,16 @@ class CallActivity : SimpleActivity() {
     private var callContact: CallContact? = null
     private var proximityWakeLock: PowerManager.WakeLock? = null
     private var screenOnWakeLock: PowerManager.WakeLock? = null
+    private var keepScreenOnWakeLock: PowerManager.WakeLock? = null
+
+    // while the "Screen on during calls" toggle is enabled, the call screen is locked in
+    // full screen so the user cannot accidentally leave the call by pressing home or recents
+    private val isLockedToCallScreen: Boolean
+        get() = config.screenOnDuringCalls && !isCallEnded
+
+    // set when the user intentionally opens another in-call screen (dialpad, conference),
+    // so leaving the call screen is not treated as an accidental departure
+    private var suppressCallScreenRelaunch = false
     private var callDuration = 0
     private val callDurationHandler = Handler(Looper.getMainLooper())
     private var dragDownX = 0f
@@ -95,7 +108,32 @@ class CallActivity : SimpleActivity() {
 
     override fun onResume() {
         super.onResume()
+        suppressCallScreenRelaunch = false
         updateState()
+        if (isLockedToCallScreen) {
+            enterLockedFullscreen()
+            acquireKeepScreenOnWakeLock()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // release the keep-screen-on wake lock while another screen is in the foreground,
+        // so the normal screen off timeout applies there
+        if (keepScreenOnWakeLock?.isHeld == true) {
+            keepScreenOnWakeLock!!.release()
+        }
+
+        // if the user leaves the call screen while the toggle is on, bring it right back,
+        // unless the screen was just turned off manually, another in-call screen was opened
+        // on purpose, or the in-call dialpad is currently shown
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        val leftCallScreen = !suppressCallScreenRelaunch && !binding.dialpadWrapper.isVisible
+        if (isLockedToCallScreen && leftCallScreen && powerManager.isInteractive) {
+            startActivity(Intent(this, CallActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            })
+        }
     }
 
     override fun onDestroy() {
@@ -106,11 +144,20 @@ class CallActivity : SimpleActivity() {
         if (screenOnWakeLock?.isHeld == true) {
             screenOnWakeLock!!.release()
         }
+
+        if (keepScreenOnWakeLock?.isHeld == true) {
+            keepScreenOnWakeLock!!.release()
+        }
     }
 
     override fun onBackPressedCompat(): Boolean {
         if (binding.dialpadWrapper.isVisible()) {
             hideDialpad()
+            return true
+        }
+
+        // with "Screen on during calls" enabled the back button must not leave the call screen
+        if (isLockedToCallScreen) {
             return true
         }
 
@@ -164,6 +211,7 @@ class CallActivity : SimpleActivity() {
         }
 
         callAdd.setOnClickListener {
+            suppressCallScreenRelaunch = true
             Intent(applicationContext, DialpadActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
                 startActivity(this)
@@ -179,6 +227,7 @@ class CallActivity : SimpleActivity() {
         }
 
         callManage.setOnClickListener {
+            suppressCallScreenRelaunch = true
             startActivity(Intent(this@CallActivity, ConferenceActivity::class.java))
         }
 
@@ -761,6 +810,11 @@ class CallActivity : SimpleActivity() {
         CallManager.reject()
         disableProximitySensor()
         audioRouteChooserDialog?.dismissAllowingStateLoss()
+        // ending the call always works, release the full screen lock right away
+        exitLockedFullscreen()
+        if (keepScreenOnWakeLock?.isHeld == true) {
+            keepScreenOnWakeLock!!.release()
+        }
 
         if (isCallEnded) {
             safeFinishAndRemoveTask()
@@ -824,6 +878,55 @@ class CallActivity : SimpleActivity() {
                 binding.callStatusLabel.text = callDuration.getFormattedDuration()
                 callDurationHandler.postDelayed(this, 1000)
             }
+        }
+    }
+
+    private fun enterLockedFullscreen() {
+        // hide the system bars and block leaving the call screen via home, recents or gestures
+        if (isOreoPlus()) {
+            WindowInsetsControllerCompat(window, binding.root).apply {
+                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                hide(WindowInsetsCompat.Type.systemBars())
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    or View.SYSTEM_UI_FLAG_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                )
+        }
+    }
+
+    private fun exitLockedFullscreen() {
+        if (isOreoPlus()) {
+            WindowInsetsControllerCompat(window, binding.root).show(WindowInsetsCompat.Type.systemBars())
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun acquireKeepScreenOnWakeLock() {
+        // SCREEN_DIM_WAKE_LOCK keeps the screen on while the call screen is in the foreground,
+        // the brightness may still fade to the minimum after the usual screen off timeout,
+        // but the screen never turns off during the call
+        if (keepScreenOnWakeLock?.isHeld == true) {
+            return
+        }
+
+        try {
+            val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+            keepScreenOnWakeLock = powerManager.newWakeLock(
+                PowerManager.SCREEN_DIM_WAKE_LOCK,
+                "org.fossify.phone:keep_screen_on_wake_lock"
+            )
+            keepScreenOnWakeLock!!.acquire()
+        } catch (e: Exception) {
         }
     }
 

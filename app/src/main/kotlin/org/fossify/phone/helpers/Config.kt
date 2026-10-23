@@ -145,4 +145,8 @@ class Config(context: Context) : BaseConfig(context) {
         set(showOnlyEndCallButton) {
             prefs.edit().putBoolean(SHOW_ONLY_END_CALL_BUTTON, showOnlyEndCallButton).apply()
         }
+
+    var screenOnDuringCalls: Boolean
+        get() = prefs.getBoolean(SCREEN_ON_DURING_CALLS, false)
+        set(screenOnDuringCalls) = prefs.edit().putBoolean(SCREEN_ON_DURING_CALLS, screenOnDuringCalls).apply()
 }
