@@ -139,4 +139,10 @@ class Config(context: Context) : BaseConfig(context) {
     var alwaysUseSpeaker: Boolean
         get() = prefs.getBoolean(ALWAYS_USE_SPEAKER, false)
         set(alwaysUseSpeaker) = prefs.edit().putBoolean(ALWAYS_USE_SPEAKER, alwaysUseSpeaker).apply()
+
+    var showOnlyEndCallButton: Boolean
+        get() = prefs.getBoolean(SHOW_ONLY_END_CALL_BUTTON, false)
+        set(showOnlyEndCallButton) {
+            prefs.edit().putBoolean(SHOW_ONLY_END_CALL_BUTTON, showOnlyEndCallButton).apply()
+        }
 }

@@ -732,7 +732,7 @@ class CallActivity : SimpleActivity() {
     private fun initOutgoingCallUI() {
         enableProximitySensor()
         binding.incomingCallHolder.beGone()
-        binding.ongoingCallHolder.beVisible()
+        binding.ongoingCallHolder.beVisibleIf(!config.showOnlyEndCallButton)
         binding.callEnd.beVisible()
     }
 
@@ -743,7 +743,7 @@ class CallActivity : SimpleActivity() {
     private fun callStarted() {
         enableProximitySensor()
         binding.incomingCallHolder.beGone()
-        binding.ongoingCallHolder.beVisible()
+        binding.ongoingCallHolder.beVisibleIf(!config.showOnlyEndCallButton)
         binding.callEnd.beVisible()
         callDurationHandler.removeCallbacks(updateCallDurationTask)
         callDurationHandler.post(updateCallDurationTask)
