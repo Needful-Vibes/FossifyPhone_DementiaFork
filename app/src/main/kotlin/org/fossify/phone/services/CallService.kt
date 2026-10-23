@@ -19,6 +19,7 @@ import org.greenrobot.eventbus.EventBus
 
 class CallService : InCallService() {
     private val callNotificationManager by lazy { CallNotificationManager(this) }
+    private var speakerAppliedAutomatically = false
 
     private val callListener = object : Call.Callback() {
         override fun onStateChanged(call: Call, state: Int) {
@@ -33,9 +34,11 @@ class CallService : InCallService() {
 
     override fun onCallAdded(call: Call) {
         super.onCallAdded(call)
+        speakerAppliedAutomatically = false
         CallManager.onCallAdded(call)
         CallManager.inCallService = this
         call.registerCallback(callListener)
+        maybeEnableSpeakerByDefault()
 
         // Incoming/Outgoing (locked): high priority (FSI)
         // Incoming (unlocked): if user opted in, low priority ➜ manual activity start, otherwise high priority (FSI)
@@ -87,6 +90,23 @@ class CallService : InCallService() {
         super.onCallAudioStateChanged(audioState)
         if (audioState != null) {
             CallManager.onAudioStateChanged(audioState)
+            maybeEnableSpeakerByDefault()
+        }
+    }
+
+    private fun maybeEnableSpeakerByDefault() {
+        if (speakerAppliedAutomatically || !config.alwaysUseSpeaker) {
+            return
+        }
+
+        val audioState = callAudioState ?: return
+        val headsetConnected = audioState.route == CallAudioState.ROUTE_BLUETOOTH ||
+            audioState.route == CallAudioState.ROUTE_WIRED_HEADSET
+        val speakerSupported = audioState.supportedRouteMask and CallAudioState.ROUTE_SPEAKER ==
+            CallAudioState.ROUTE_SPEAKER
+        if (!headsetConnected && speakerSupported) {
+            speakerAppliedAutomatically = true
+            setAudioRoute(CallAudioState.ROUTE_SPEAKER)
         }
     }
 

@@ -112,6 +112,7 @@ class SettingsActivity : SimpleActivity() {
         setupDisableProximitySensor()
         setupDisableSwipeToAnswer()
         setupAlwaysShowFullscreen()
+        setupAlwaysUseSpeaker()
         setupCallsExport()
         setupCallsImport()
         updateTextColors(binding.settingsHolder)
@@ -122,6 +123,7 @@ class SettingsActivity : SimpleActivity() {
                 settingsGeneralSettingsLabel,
                 settingsStartupLabel,
                 settingsCallsLabel,
+                settingsAccessibilitySectionLabel,
                 settingsDialpadSectionLabel,
                 settingsMigrationSectionLabel
             ).forEach {
@@ -380,6 +382,16 @@ class SettingsActivity : SimpleActivity() {
             settingsAlwaysShowFullscreenHolder.setOnClickListener {
                 settingsAlwaysShowFullscreen.toggle()
                 config.alwaysShowFullscreen = settingsAlwaysShowFullscreen.isChecked
+            }
+        }
+    }
+
+    private fun setupAlwaysUseSpeaker() {
+        binding.apply {
+            settingsAlwaysUseSpeaker.isChecked = config.alwaysUseSpeaker
+            settingsAlwaysUseSpeakerHolder.setOnClickListener {
+                settingsAlwaysUseSpeaker.toggle()
+                config.alwaysUseSpeaker = settingsAlwaysUseSpeaker.isChecked
             }
         }
     }
