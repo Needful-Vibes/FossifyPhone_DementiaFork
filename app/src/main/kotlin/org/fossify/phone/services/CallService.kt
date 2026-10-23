@@ -100,8 +100,10 @@ class CallService : InCallService() {
         }
 
         val audioState = callAudioState ?: return
-        val headsetConnected = audioState.route == CallAudioState.ROUTE_BLUETOOTH || audioState.route == CallAudioState.ROUTE_WIRED_HEADSET
-        val speakerSupported = audioState.supportedRouteMask and CallAudioState.ROUTE_SPEAKER == CallAudioState.ROUTE_SPEAKER
+        val headsetConnected = audioState.route == CallAudioState.ROUTE_BLUETOOTH ||
+            audioState.route == CallAudioState.ROUTE_WIRED_HEADSET
+        val speakerSupported = audioState.supportedRouteMask and CallAudioState.ROUTE_SPEAKER ==
+            CallAudioState.ROUTE_SPEAKER
         if (!headsetConnected && speakerSupported) {
             speakerAppliedAutomatically = true
             setAudioRoute(CallAudioState.ROUTE_SPEAKER)
